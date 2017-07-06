@@ -46,7 +46,7 @@ def softmax(X):
     :return:
     """
     #TODO softmax function
-
+    return 0
 
 class MLP:
     def __init__(self, input_size, output_size, hidden_layer_size=[100], batch_size=200, activation="sigmoid", output_layer='softmax', loss='cross_entropy', lr=0.01, reg_lambda=0.0001, momentum=0.9, verbose=10):
@@ -119,7 +119,7 @@ class MLP:
         :param shuffle_data: bool, if shuffle the data.
         :return: MLP model object
         """
-        n_samples, n_features = X.shape
+        n_samples, n_features = X.shape                                         #why @peifen
         if y.shape[0] != n_samples:
             raise ValueError("Shapes of X and y don't fit!")
 
@@ -160,6 +160,7 @@ class MLP:
             # iterate every batch
             for batch in xrange(0, n_samples, self.batch_size):
                 #TODO call forward function
+
                 #TODO call backward function
 
                 if i % self.verbose == 0:
@@ -181,11 +182,10 @@ class MLP:
         probs = self.forward(X)
 
         # TODO Calculating the loss
-        
-
+        data_loss = 1 / 2 * (np.sum ( y - probs)**2 )
 
         # TODO Add regularization term to loss
-        
+        data_loss += self.reg_lambda * self.weights
 
         return 1. / n_samples * data_loss
 
@@ -194,10 +194,11 @@ class MLP:
         self.layers[0] = X
 
         # TODO hidden layers
-       
+        for i in range(1, len(self.hidden_layer_size)):
+            self.layers[i] = self.activation_func( np.sum( np.dot(self.layers[i - 1],self.weights[:, 0]) ) + self.bias[i])
 
         # TODO output layer (Note here the activation is using output_layer func)
-        
+        self.layers = self.output_layer (np.sum( np.dot(self.layers[-2], self.weights[:, 0] ) )+ self.bias[-1])
 
         return self.layers[-1]
 
@@ -208,9 +209,11 @@ class MLP:
             self.deltas[-1][range(X.shape[0]), y] -= 1
 
         # TODO update deltas
-        
+        for i in range(1, len(self.n_layers)):
+            self.deltas = np.sum( self.deltas[i + 1] * self.weights[:, 0])
         # TODO update weights
-
+        for i in range(0, len(self.n_layers)):
+            self.weights[i] = np.sum( self.weights[i] + self.lr * self.deltas[i]* self.activation_dfunc()* X )
     
     def predict(self, X):
         """
